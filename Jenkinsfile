@@ -58,7 +58,7 @@ pipeline {
                 sh """
                 mvn sonar:sonar \
                   -Dsonar.projectKey=tes \
-                  -Dsonar.host.url=http://54.175.122.112:9000\
+                  -Dsonar.host.url=http://10.0.0.115:9000\
                   -Dsonar.login=3d12c20aa99bb25f034f9ad0d8d498b8b1b2f3c4
                 """
                 }
@@ -70,10 +70,10 @@ pipeline {
            nexusArtifactUploader(
               nexusVersion: 'nexus3',
               protocol: 'http',
-              nexusUrl: '54.167.23.81:8081',
+              nexusUrl: '10.0.0.116:8081',
               groupId: 'webapp',
               version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-              repository: 'maven-project-releases',  //"${NEXUS_REPOSITORY}",
+              repository: 'maven-project-releases',  //"${maven-central-repository}",
               credentialsId: "${NEXUS_CREDENTIAL_ID}",
               artifacts: [
                   [artifactId: 'webapp',
@@ -123,7 +123,7 @@ pipeline {
   post {
     always {
         echo 'Slack Notifications.'
-        slackSend channel: '#cicd-pipeline-project-alerts-2', //update and provide your channel name
+        slackSend channel: '#pipeline-alerts', //update and provide your channel name
         color: COLOR_MAP[currentBuild.currentResult],
         message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
     }

@@ -15,10 +15,10 @@ pipeline {
     //NEXUS_REPO_ID    = "maven_project"
     //ARTVERSION = "${env.BUILD_ID}"
   }
-  tools {
+  */tools {
     maven 'localMaven'
     jdk 'localJdk'
-  }
+  }/*
   stages {
     stage('Build') {
       steps {

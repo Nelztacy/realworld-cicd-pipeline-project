@@ -206,7 +206,7 @@
     ```
     - Install Splunk
     ```
-    sudo yum install ./splunk-9.0.2-17e00c557dc1-linux-2.6-x86_64.rpm -y
+    sudo yum install ./splunk-9.0.4.1-419ad9369127-linux-2.6-x86_64.rpm -y
     ```
     - Start the splunk server 
     ```bash

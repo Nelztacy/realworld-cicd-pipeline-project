@@ -62,9 +62,13 @@ pipeline {
                   -Dsonar.login=a486d29380b7014b6f6414f46a6ac2de7540392f
                 """
                 }
-            }
-        }
-    }
+    stage('SonarQube GateKeeper') {
+        steps {
+            timeout(time : 1, unit : 'HOURS'){
+            waitForQualityGate abortPipeline: true
+      }
+   }
+}
     stage("Nexus Artifact Uploader"){
         steps{
            nexusArtifactUploader(

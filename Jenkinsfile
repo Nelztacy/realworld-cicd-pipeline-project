@@ -54,12 +54,12 @@ pipeline {
     stage('SonarQube Inspection') {
         steps {
             withSonarQubeEnv('SonarQube') { 
-                withCredentials([string(credentialsId: 'SonarQube-Token', variable: 'SONAR_TOKEN')]) {
+                withCredentials([string(credentialsId: 'SonarQube-Token', variable: 'sonar-key')]) {
                 sh """
                 mvn sonar:sonar \
                   -Dsonar.projectKey=tes \
                   -Dsonar.host.url=http://10.0.0.115:9000\
-                  -Dsonar.login=3d12c20aa99bb25f034f9ad0d8d498b8b1b2f3c4
+                  -Dsonar.login=a486d29380b7014b6f6414f46a6ac2de7540392f
                 """
                 }
             }

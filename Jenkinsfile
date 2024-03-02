@@ -62,13 +62,15 @@ pipeline {
                   -Dsonar.login=a486d29380b7014b6f6414f46a6ac2de7540392f
                 """
                 }
+            }
+        }               
     stage('SonarQube GateKeeper') {
         steps {
             timeout(time : 1, unit : 'HOURS'){
             waitForQualityGate abortPipeline: true
-      }
-   }
-}
+                }
+            }
+        }
     stage("Nexus Artifact Uploader"){
         steps{
            nexusArtifactUploader(
@@ -132,4 +134,5 @@ pipeline {
         message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
     }
   }
+}
 }

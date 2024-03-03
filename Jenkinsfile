@@ -84,7 +84,7 @@ pipeline {
                     repository: 'maven-project-releases',
                     credentialsId: "${NEXUS_CREDENTIAL_ID}",
                     artifacts: [
-                        [artifactId: 'webapp',
+                        [artifactId: 'maven-project',
                         classifier: '',
                         file: "${WORKSPACE}/webapp/target/webapp.war",
                         type: 'war']

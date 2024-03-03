@@ -12,8 +12,8 @@ pipeline {
         NEXUS_USER = "nexus"
         NEXUS_PASSWORD = "password123"
         NEXUS_URL = "10.0.0.116:8081"
-        NEXUS_REPOSITORY = "maven_project"
-        NEXUS_REPO_ID    = "maven_project"
+        NEXUS_REPOSITORY = "maven-project-central"
+        NEXUS_REPO_ID    = "maven-project-central"
         ARTVERSION = "${env.BUILD_ID}"
     }
     tools {

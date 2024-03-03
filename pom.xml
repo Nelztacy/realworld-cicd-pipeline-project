@@ -21,12 +21,6 @@
     <module>webapp</module>
   </modules>
 
-  <server>
-    <id>nexus</id>
-    <username>nexus</username>
-    <password>password123</password>
-  </server>
-
   <distributionManagement>
     <site>
       <id>site-server</id>

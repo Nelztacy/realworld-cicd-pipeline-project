@@ -28,13 +28,13 @@
       <url>file:///tmp/maven-project-site</url>
     </site>
     <snapshotRepository>
-            <id>nexus</id>
-            <url>http://10.0.0.116:8081/repository/maven-project-snapshot/</url>
-        </snapshotRepository>
-        <repository>
-            <id>nexus</id>
-            <url>http://10.0.0.116:8081/repository/maven-project-releases/</url>
-        </repository>
+      <id>nexus</id>
+      <url>http://10.0.0.116:8081/repository/maven-project-snapshot/</url>
+    </snapshotRepository>
+    <repository>
+      <id>nexus</id>
+      <url>http://10.0.0.116:8081/repository/maven-project-releases/</url>
+    </repository>
   </distributionManagement>
 
   <build>
@@ -98,7 +98,7 @@
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.2.0</version>
-        <plugin>
+        </plugin>
         -->
 
         <plugin>
@@ -208,21 +208,4 @@
       <dependency>
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
-        <version>1.2.1</version>
-        <scope>test</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>org.mockito</groupId>
-        <artifactId>mockito-core</artifactId>
-        <version>1.8.5</version>
-        <scope>test</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <prerequisites>
-    <maven>3.0.3</maven>
-  </prerequisites>
-
-</project>
+        <version>1.2.

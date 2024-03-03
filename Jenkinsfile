@@ -13,7 +13,7 @@ pipeline {
         NEXUS_PASSWORD = "password123"
         NEXUS_URL = "10.0.0.116:8081"
         NEXUS_REPOSITORY = "maven-project-central"
-        NEXUS_REPO_ID    = "maven-project-central"
+        NEXUS_REPO_ID = "maven-project-central"
         ARTVERSION = "${env.BUILD_ID}"
     }
     tools {
@@ -59,7 +59,7 @@ pipeline {
                         sh """
                         mvn sonar:sonar \
                         -Dsonar.projectKey=tes \
-                        -Dsonar.host.url=http://10.0.0.115:9000\
+                        -Dsonar.host.url=http://10.0.0.115:9000 \
                         -Dsonar.login=a486d29380b7014b6f6414f46a6ac2de7540392f
                         """
                     }
@@ -73,23 +73,44 @@ pipeline {
                 }
             }
         }
-        stage("Nexus Artifact Uploader") {
+        stage("publish to nexus") {
             steps {
-                nexusArtifactUploader(
-                    nexusVersion: 'nexus3',
-                    protocol: 'http',
-                    nexusUrl: '10.0.0.116:8081',
-                    groupId: 'webapp',
-                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                    repository: 'maven-project-releases',
-                    credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                    artifacts: [
-                        [artifactId: 'maven-project',
-                        classifier: '',
-                        file: "${WORKSPACE}/webapp/target/webapp.war",
-                        type: 'war']
-                    ]
-                )
+                script {
+                    // Read POM xml file using 'readMavenPom' step, this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    pom = readMavenPom file: "pom.xml";
+                    // Find built artifact under target folder
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    // Print some info from the artifact found
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    // Extract the path from the File found
+                    artifactPath = filesByGlob[0].path;
+                    // Assign to a boolean response verifying If the artifact name exists
+                    artifactExists = fileExists artifactPath;
+
+                    if (artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+
+                        nexusArtifactUploader(
+                            nexusVersion: 'nexus3',
+                            protocol: 'http',
+                            nexusUrl: '10.0.0.116:8081',
+                            groupId: 'com.example.maven-project',
+                            version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                            repository: 'maven-project-releases',
+                            credentialsId: "${NEXUS_CREDENTIAL_ID}",
+                            artifacts: [
+                                // Artifact generated such as .jar, .ear and .war files.
+                                [artifactId: 'maven-project',
+                                    classifier: '',
+                                    file: "${WORKSPACE}/webapp/target/webapp.war",
+                                    type: 'war']
+                            ]
+                        );
+
+                    } else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
             }
         }
         stage('Deploy to Development Env') {

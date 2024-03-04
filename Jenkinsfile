@@ -91,7 +91,7 @@ pipeline {
                             nexusVersion: 'nexus3',
                             protocol: 'http',
                             nexusUrl: '10.0.0.116:8081',
-                            groupId: com.example.maven-project
+                            groupId: 'com.example.maven-project',
                             version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
                             repository: 'maven-project-releases',
                             credentialsId: "${NEXUS_CREDENTIAL_ID}",

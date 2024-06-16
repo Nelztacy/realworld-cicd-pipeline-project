@@ -44,7 +44,7 @@ pipeline {
         stage('SonarQube Inspection') {
             steps {
                 withSonarQubeEnv('SonarQube') { 
-                    withCredentials([string(credentialsId: 'SonarQube-Token', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL-SonaQube-Token')]) {
                         sh """
                         mvn sonar:sonar \
                           -Dsonar.projectKey=demo \

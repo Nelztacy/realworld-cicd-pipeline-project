@@ -6,7 +6,8 @@ def COLOR_MAP = [
 pipeline {
   agent any
   environment {
-    WORKSPACE = "${env.WORKSPACE}"
+    // WORKSPACE = "${env.WORKSPACE}"
+    WORKSPACE = "/var/lib/jenkins/workspace/${env.JOB_NAME}"
     NEXUS_CREDENTIAL_ID = 'Nexus-Credential'
     //NEXUS_USER = "$NEXUS_CREDS_USR"
     //NEXUS_PASSWORD = "$Nexus-Token"
@@ -100,17 +101,21 @@ pipeline {
     //         input('Do you want to proceed?')
     //     }
     // }
-    stage('Deploy to Production Env') {
-        environment {
-            HOSTS = 'prod'
-        }
-        steps {
-            withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
-                sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
+    
+    stage('Deploy to Development Env') {
+            environment {
+                HOSTS = 'dev'
             }
-         }
-      }
-   }
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
+                    sh "ansible-playbook -i ${env.WORKSPACE}/ansible-config/aws_ec2.yaml ${env.WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=${env.WORKSPACE}\""
+                }
+            }
+        }
+	}
+
+    }
+
   post {
     always {
         echo 'Slack Notifications.'
@@ -119,4 +124,3 @@ pipeline {
         message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
     }
   }
-}

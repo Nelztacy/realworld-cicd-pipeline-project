@@ -1,14 +1,17 @@
 pipeline {
     agent any
+
     environment {
         WORKSPACE = "/home/solar/jenkins-prod/${env.JOB_NAME}"
         NEXUS_CREDENTIAL_ID = 'Nexus-Credential'
         // Add other environment variables as needed
     }
+
     tools {
         maven 'localMaven'
         jdk 'localJdk'
     }
+
     stages {
         stage('Build') {
             steps {
@@ -21,16 +24,19 @@ pipeline {
                 }
             }
         }
+
         stage('Unit Test') {
             steps {
                 sh 'mvn test'
             }
         }
+
         stage('Integration Test') {
             steps {
                 sh 'mvn verify -DskipUnitTests'
             }
         }
+
         stage ('Checkstyle Code Analysis') {
             steps {
                 sh 'mvn checkstyle:checkstyle'
@@ -41,6 +47,7 @@ pipeline {
                 }
             }
         }
+
         stage('SonarQube Inspection') {
             steps {
                 withSonarQubeEnv('SonarQube') { 
@@ -55,25 +62,31 @@ pipeline {
                 }
             }
         }
+
         stage("Nexus Artifact Uploader") {
             steps {
-                nexusArtifactUploader(
-                    nexusVersion: 'nexus3',
-                    protocol: 'http',
-                    nexusUrl: '10.0.0.116:8081',
-                    groupId: 'webapp',
-                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                    repository: 'maven-project-releases',
-                    credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                    artifacts: [
-                        [artifactId: 'webapp',
-                         classifier: '',
-                         file: "${WORKSPACE}/home/solar/jenkins-prod/${env.JOB_NAME}"
-                         type: 'war']
-                    ]
-                )
+                script {
+                    nexusArtifactUploader(
+                        nexusVersion: 'nexus3',
+                        protocol: 'http',
+                        nexusUrl: 'http://10.0.0.116:8081', // Corrected to use full URL with protocol
+                        groupId: 'webapp',
+                        version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                        repository: 'maven-project-releases',
+                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
+                        artifacts: [
+                            [
+                                artifactId: 'webapp',
+                                classifier: '',
+                                file: "${WORKSPACE}/webapp/target/webapp.war",
+                                type: 'war'
+                            ]
+                        ]
+                    )
+                }
             }
         }
+
         stage('Deploy to Development Env') {
             environment {
                 HOSTS = 'dev'
@@ -84,8 +97,11 @@ pipeline {
                 }
             }
         }
+
         // Add more stages as needed
+
     }
+
     post {
         always {
             echo 'Sending Slack Notifications.'
@@ -97,3 +113,4 @@ pipeline {
         }
     }
 }
+

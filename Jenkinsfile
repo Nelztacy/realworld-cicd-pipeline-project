@@ -57,12 +57,12 @@ pipeline {
         stage('SonarQube Inspection') {
             steps {
                 withSonarQubeEnv('SonarQube') { 
-                    withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL-SonaQube-Token')]) {
+                    withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL_SONARQUBE_TOKEN')]) {
                         sh """
                         mvn sonar:sonar \
                           -Dsonar.projectKey=demo \
                           -Dsonar.host.url=http://10.0.0.115:9000 \
-                          -Dsonar.login=38d4894edbc5eab1cc29f705e67fa1e3e0f4884b
+                          -Dsonar.login=${NHL_SONARQUBE_TOKEN}
                         """
                     }
                 }
@@ -71,25 +71,21 @@ pipeline {
 
         stage("Nexus Artifact Uploader") {
             steps {
-                script {
-                    nexusArtifactUploader(
-                        nexusVersion: 'nexus3',
-                        protocol: 'http',
-                        nexusUrl: 'http://10.0.0.116:8081', // Corrected to use full URL with protocol
-                        groupId: 'webapp',
-                        version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                        repository: 'maven-project-releases',
-                        credentialsId: "${NEXUS_CREDENTIAL_ID}",
-                        artifacts: [
-                            [
-                                artifactId: 'webapp',
-                                classifier: '',
-                                file: "${WORKSPACE}/webapp/target/webapp.war",
-                                type: 'war'
-                            ]
-                        ]
-                    )
-                }
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: '10.0.0.116:8081',
+                    groupId: 'webapp',
+                    version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                    repository: 'maven-project-releases',
+                    credentialsId: "${NEXUS_CREDENTIAL_ID}",
+                    artifacts: [
+                        [artifactId: 'webapp',
+                        classifier: '',
+                        file: "${env.WORKSPACE}/webapp/target/webapp.war",
+                        type: 'war']
+                    ]
+                )
             }
         }
 
@@ -99,13 +95,12 @@ pipeline {
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
-                    sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
+                    sh "ansible-playbook -i ${env.WORKSPACE}/ansible-config/aws_ec2.yaml ${env.WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=${env.WORKSPACE}\""
                 }
             }
         }
 
         // Add more stages as needed
-
     }
 
     post {
@@ -119,4 +114,3 @@ pipeline {
         }
     }
 }
-

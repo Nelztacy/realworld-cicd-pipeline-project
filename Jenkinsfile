@@ -8,12 +8,12 @@ pipeline {
   environment {
     WORKSPACE = "${env.WORKSPACE}"
     NEXUS_CREDENTIAL_ID = 'Nexus-Credential'
-    NEXUS_USER = "$NEXUS_CREDS_USR"
-    NEXUS_PASSWORD = "$Nexus-Token"
-    NEXUS_URL = "10.0.0.116:8081"
-    NEXUS_REPOSITORY = "maven_project"
-    NEXUS_REPO_ID    = "maven_project"
-    ARTVERSION = "${env.BUILD_ID}"
+    //NEXUS_USER = "$NEXUS_CREDS_USR"
+    //NEXUS_PASSWORD = "$Nexus-Token"
+    //NEXUS_URL = "10.0.0.116:8081"
+    //NEXUS_REPOSITORY = "maven_project"
+    //NEXUS_REPO_ID    = "maven_project"
+    //ARTVERSION = "${env.BUILD_ID}"
   }
   tools {
     maven 'localMaven'
@@ -54,11 +54,11 @@ pipeline {
     stage('SonarQube Inspection') {
         steps {
             withSonarQubeEnv('SonarQube') { 
-                withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL-SonarQube-Token')]) {
+                withCredentials([string(credentialsId: 'SonarQube-Token', variable: 'SONAR_TOKEN')]) {
                 sh """
                 mvn sonar:sonar \
                   -Dsonar.projectKey=demo \
-                  -Dsonar.host.url=http://10.0.0.115:9000 \
+                  -Dsonar.host.url=http://10.0.0.115:9000\
                   -Dsonar.login=38d4894edbc5eab1cc29f705e67fa1e3e0f4884b
                 """
                 }
@@ -104,25 +104,22 @@ pipeline {
             }
         }
     }
-  }
-} 
+    // stage('Quality Assurance Approval') {
+    //     steps {
+    //         input('Do you want to proceed?')
+    //     }
     // }
-//     stage('Quality Assurance Approval') {
-//         steps {
-//             input('Do you want to proceed?')
-//         }
-//     }
-//     stage('Deploy to Production Env') {
-//         environment {
-//             HOSTS = 'prod'
-//         }
-//         steps {
-//             withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
-//                 sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
-//             }
-//          }
-//       }
-//    }
+    // stage('Deploy to Production Env') {
+    //     environment {
+    //         HOSTS = 'prod'
+    //     }
+    //     steps {
+    //         withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
+    //             sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
+    //         }
+    //      }
+    //   }
+   }
 //   post {
 //     always {
 //         echo 'Slack Notifications.'
@@ -130,5 +127,5 @@ pipeline {
 //         color: COLOR_MAP[currentBuild.currentResult],
 //         message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
 //     }
+  }
 // }
-

@@ -68,7 +68,8 @@ pipeline {
                     artifacts: [
                         [artifactId: 'webapp',
                          classifier: '',
-                         file: "${WORKSPACE}/webapp/target/webapp.war",
+                         #file: "${WORKSPACE}/webapp/target/webapp.war",
+                         file: "${WORKSPACE}/home/solar/jenkins-prod/${env.JOB_NAME}"
                          type: 'war']
                     ]
                 )

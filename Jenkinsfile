@@ -95,11 +95,11 @@ pipeline {
     //         }
     //     }
     // }
-    stage('Quality Assurance Approval') {
-        steps {
-            input('Do you want to proceed?')
-        }
-    }
+    // stage('Quality Assurance Approval') {
+    //     steps {
+    //         input('Do you want to proceed?')
+    //     }
+    // }
     stage('Deploy to Production Env') {
         environment {
             HOSTS = 'prod'

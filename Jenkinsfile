@@ -3,18 +3,12 @@ def COLOR_MAP = [
     'FAILURE': 'danger',
     'UNSTABLE': 'danger'
 ]
+
 pipeline {
   agent any
   environment {
-    // WORKSPACE = "${env.WORKSPACE}"
     WORKSPACE = "/var/lib/jenkins/workspace/${env.JOB_NAME}"
     NEXUS_CREDENTIAL_ID = 'Nexus-Credential'
-    //NEXUS_USER = "$NEXUS_CREDS_USR"
-    //NEXUS_PASSWORD = "$Nexus-Token"
-    //NEXUS_URL = "10.0.0.116:8081"
-    //NEXUS_REPOSITORY = "maven_project"
-    //NEXUS_REPO_ID    = "maven_project"
-    //ARTVERSION = "${env.BUILD_ID}"
   }
   tools {
     maven 'localMaven'
@@ -27,100 +21,108 @@ pipeline {
       }
       post {
         success {
-          echo ' now Archiving '
+          echo 'Now Archiving'
           archiveArtifacts artifacts: '**/*.war'
         }
       }
     }
-    stage('Unit Test'){
-        steps {
-            sh 'mvn test'
-        }
+    stage('Unit Test') {
+      steps {
+        sh 'mvn test'
+      }
     }
-    stage('Integration Test'){
-        steps {
-          sh 'mvn verify -DskipUnitTests'
-        }
+    stage('Integration Test') {
+      steps {
+        sh 'mvn verify -DskipUnitTests'
+      }
     }
-    stage ('Checkstyle Code Analysis'){
-        steps {
-            sh 'mvn checkstyle:checkstyle'
+    stage('Checkstyle Code Analysis') {
+      steps {
+        sh 'mvn checkstyle:checkstyle'
+      }
+      post {
+        success {
+          echo 'Generated Analysis Result'
         }
-        post {
-            success {
-                echo 'Generated Analysis Result'
-            }
-        }
+      }
     }
     stage('SonarQube Inspection') {
-        steps {
-            withSonarQubeEnv('SonarQube') { 
-                withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL-SonarQube-Token')]) {
-                sh """
-                mvn sonar:sonar \
-                  -Dsonar.projectKey=demo \
-                  -Dsonar.host.url=http://10.0.0.115:9000 \
-                  -Dsonar.login=38d4894edbc5eab1cc29f705e67fa1e3e0f4884b
-                """
-                }
-            }
+      steps {
+        withSonarQubeEnv('SonarQube') { 
+          withCredentials([string(credentialsId: 'NHL-SonarQube-Token', variable: 'NHL-SonarQube-Token')]) {
+            sh """
+            mvn sonar:sonar \
+              -Dsonar.projectKey=demo \
+              -Dsonar.host.url=http://10.0.0.115:9000 \
+              -Dsonar.login=38d4894edbc5eab1cc29f705e67fa1e3e0f4884b
+            """
+          }
         }
+      }
     }
-    stage("Nexus Artifact Uploader"){
-        steps{
-           nexusArtifactUploader(
-              nexusVersion: 'nexus3',
-              protocol: 'http',
-              nexusUrl: '10.0.0.116:8081',
-              groupId: 'webapp',
-              version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-              repository: 'maven-project-releases',  //"${NEXUS_REPOSITORY}",
-              credentialsId: "${NEXUS_CREDENTIAL_ID}",
-              artifacts: [
-                  [artifactId: 'webapp',
-                  classifier: '',
-                  file: "${WORKSPACE}/webapp/target/webapp.war",
-                  type: 'war']
-              ]
-           )
-        }
+    stage('Nexus Artifact Uploader') {
+      steps {
+        nexusArtifactUploader(
+          nexusVersion: 'nexus3',
+          protocol: 'http',
+          nexusUrl: '10.0.0.116:8081',
+          groupId: 'webapp',
+          version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+          repository: 'maven-project-releases',
+          credentialsId: "${NEXUS_CREDENTIAL_ID}",
+          artifacts: [
+            [artifactId: 'webapp',
+            classifier: '',
+            file: "${WORKSPACE}/webapp/target/webapp.war",
+            type: 'war']
+          ]
+        )
+      }
     }
-    
-    // stage('Deploy to Staging Env') {
-    //     environment {
-    //         HOSTS = 'stage'
-    //     }
-    //     steps {
-    //         withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
-    //             sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
-    //         }
-    //     }
-    // }
-    // stage('Quality Assurance Approval') {
-    //     steps {
-    //         input('Do you want to proceed?')
-    //     }
-    // }
-    
+    stage('Quality Assurance Approval') {
+      steps {
+        input('Do you want to proceed?')
+      }
+    }
     stage('Deploy to Development Env') {
-            environment {
-                HOSTS = 'dev'
-            }
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
-                    sh "ansible-playbook -i ${env.WORKSPACE}/ansible-config/aws_ec2.yaml ${env.WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=${env.WORKSPACE}\""
-                }
-            }
+      environment {
+        HOSTS = 'dev'
+      }
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
+          sh "ansible-playbook -i ${env.WORKSPACE}/ansible-config/aws_ec2.yaml ${env.WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=${env.WORKSPACE}\""
         }
-	}
-
+      }
     }
-
-  post {
-    always {
-        echo 'Slack Notifications.'
-        slackSend channel: '#cicd-pipeline-project-alerts-3', //update and provide your channel name
-        color: COLOR_MAP[currentBuild.currentResult],
-        message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
+    stage('Copy Artifacts to Tomcat') {
+      steps {
+        sshPublisher(
+          publishers: [
+            sshPublisherDesc(
+              configName: 'Tomcat Server',
+              transfers: [
+                sshTransfer(
+                  sourceFiles: '**/*.war',
+                  removePrefix: '',
+                  remoteDirectory: '/var/lib/tomcat9/webapps/',
+                  execCommand: '',
+                  execTimeout: 120000
+                )
+              ],
+              usePromotionTimestamp: false,
+              verbose: true
+            )
+          ]
+        )
+      }
     }
   }
+  post {
+    always {
+      echo 'Slack Notifications.'
+      slackSend channel: '#cicd-pipeline-project-alerts-3', // update and provide your channel name
+      color: COLOR_MAP[currentBuild.currentResult],
+      message: "*${currentBuild.currentResult}:* Job Name '${env.JOB_NAME}' build ${env.BUILD_NUMBER} \n Build Timestamp: ${env.BUILD_TIMESTAMP} \n Project Workspace: ${env.WORKSPACE} \n More info at: ${env.BUILD_URL}"
+    }
+  }
+}
